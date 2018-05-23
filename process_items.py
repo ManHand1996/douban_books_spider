@@ -108,68 +108,12 @@
 import redis
 import csv
 import os
-import re
-import pandas
-DATA_FILE_PATH = os.path.join(os.path.expanduser("~"),"Data","douban")
-DictCurrency = {"$":6.38,"CNY": 1.0,"GBP":8.574, "HKD":0.8,"USD":6.38, "CAD":5.0 ,
-            "JPY":0.058,"RMB":1.0, "EUR":7.52, "AUD":4.83,"CDN":5, "NT$":0.21,
-            " $":6.38, "£ ":8.574,"日元":0.058,"NTD":0.21,"NT":0.21,"元":1.0}
+import MySQLdb
+from sqlalchemy import create_engine
+from process_item_mysql import checkBookInfo,to_mysql
 
-def clearnData():
-    books_data = os.path.join(os.path.expanduser('~'),'Data','douban','books_v2.csv')
-
-def isPrice(info):
-    try:
-        price = float(info)
-    except ValueError as e:
-        for key in DictCurrency:
-            if info.find(key) >= 0:
-                info = info.strip(key).strip(" ")
-                try:
-                    price = float(info)
-                except ValueError as e:
-                    return -1
-                else:
-                    return float(DictCurrency[key]*price)
-        return -1
-    else:
-        return price
-
-def isPublishing(info):
-    if info.find('出版社') >= 0:
-        return info
-    else:
-        return -2
-
-def checkBookInfo(infos):
-    # check date and price
-    tmp_infos = ['unknow' for i in range(5)]
-    date_pattern = r"[0-9]{4}(-[0-9]{1,2})?(-[0-9]{1,2})?"
-
-    print('current infos len:',len(infos))
-    for i in range(0,len(infos)):
-
-        price = isPrice(infos[i])
-        r = re.search(date_pattern,infos[i])
-        
-        if price != -1 and r is None:
-            # 兑换
-            tmp_infos[4] = price
-            continue
-        elif r is not None and price == -1:
-            tmp_infos[3] = r.group(0)
-            continue
-
-        elif price == -1 and r is None:
-            if i != 3 and i !=4:
-                tmp_infos[i] = infos[i]
-            continue        
-        else:
-            continue
-        # except ValueError as e:
-        #     continue
-             
-    return tmp_infos
+DATA_FILE_PATH = os.path.join("./Data","douban-books.csv")
+NEW_DATA_FILE_PATH = os.path.join("./Data","douban-books_clean.csv")
 
 def purgeItems(data,file_name):
 	
@@ -185,10 +129,11 @@ def purgeItems(data,file_name):
         full_data.append(data['comments'])
         full_data.append(data['rating'])
         full_data.append(data['tag'])
+        
         print('book name:',data['book_name'])
         count_unknow = 0
-        for t in date['book_info'].split('/'):
-            if t == "unknow"
+        for t in data['book_info'].split('/'):
+            if t == "unknow":
                 count_unknow += 1
         if count_unknow == 5:
             return 
@@ -219,7 +164,7 @@ def process_items(host,port,passwd,db,keys):
 	"""
     rd = redis.Redis(host=host,port=port,password=passwd,db=db,decode_responses=True)
 
-    file_name = os.path.join(DATA_FILE_PATH,'books.csv')
+    file_name = os.path.join(DATA_FILE_PATH)
     print(file_name)
     # if file not exists ,create it
     if not os.path.exists(file_name):
@@ -235,3 +180,5 @@ def process_items(host,port,passwd,db,keys):
 
 if __name__ == '__main__':
     process_items('127.0.0.1',6379,'redispassword',0,['master:items','salve1:items'])
+    # mysql_engine = create_engine('mysql+mysqldb://root:manhand@localhost:3306/douban_books_db?charset=utf8')
+    # to_mysql(mysql_engine,DATA_FILE_PATH,NEW_DATA_FILE_PATH)
