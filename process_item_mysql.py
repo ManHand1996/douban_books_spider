@@ -8,7 +8,11 @@ DictCurrency = {"$":6.38,"CNY": 1.0,"GBP":8.574, "HKD":0.8,"USD":6.38, "CAD":5.0
 
 def to_mysql(mysql_engine,DATA_FILE_PATH,NEW_DATA_FILE_PATH):
     books_data = pandas.read_csv(DATA_FILE_PATH,skiprows=[0,],
-        names =['Bookname','Comments','Rating','Tag','Author','Translator','Publishing','Date','Price'])
+        names =['Bookname','Comments','Rating','Tag',
+                'Author','Translator','Publishing',
+                'Date','Price'
+                    ]
+                )
     
     books_data['Date'] = pandas.to_datetime(books_data['Date'],errors='coerce')
     books_data['Price'] = pandas.to_numeric(books_data['Price'],errors='coerce',downcast='float')
@@ -17,16 +21,38 @@ def to_mysql(mysql_engine,DATA_FILE_PATH,NEW_DATA_FILE_PATH):
         header=['Bookname','Comments','Rating','Tag','Author','Translator','Publishing','Date','Price'])    
     books_data = pandas.read_csv(NEW_DATA_FILE_PATH,skiprows=[0,],names =['Bookname','Comments','Rating','Tag'
                                                     ,'Author','Translator','Publishing','Date','Price'])
-    books_data.index = range(1,len(books_data)+1)
+    # books_data.index = range(1,len(books_data)+1)
     # mysql_engine = create_engine('mysql+mysqldb://root:manhand@localhost:3306/douban_books_db?charset=utf8')
 
-    books_data.to_sql(name='douban_books_tb',if_exists='append',con=mysql_engine,index=True,index_label='num')
+    # books_data.to_sql(name='douban_books_tb',if_exists='append',con=mysql_engine,index=True,index_label='num')
 
-    print("To MySQL...")
-    r = mysql_engine.execute("select count(num) from douban_books_tb")
-    print("books quantity:",r.first())
+    # print("To MySQL...")
+    # r = mysql_engine.execute("select count(num) from douban_books_tb")
+    # print("books quantity:",r.first())
 
-def isPrice(info):
+def clean_data(DATA_FILE_PATH,NEW_DATA_FILE_PATH):
+    books_data = pandas.read_csv(DATA_FILE_PATH,skiprows=[0,],
+        names =['Bookname','Comments','Rating','Tag',
+                'Author','Translator','Publishing',
+                'Date','Price'
+                    ]
+                )
+    
+    books_data['Date'] = pandas.to_datetime(books_data['Date'],errors='coerce')
+    books_data['Price'] = pandas.to_numeric(books_data['Price'],errors='coerce',
+                                            downcast='float')
+    
+    books_data.to_csv(path_or_buf=NEW_DATA_FILE_PATH,index=False,float_format='%.3f',
+        header=['Bookname','Comments','Rating','Tag','Author',
+                'Translator','Publishing','Date','Price']) 
+
+    print("success ")
+
+def trans_Price(info):
+    if info == 'unknow':
+        return 0.0
+
+    info = info.replace("、",".")
     try:
         price = float(info)
     except ValueError as e:
@@ -36,13 +62,11 @@ def isPrice(info):
                 try:
                     price = float(info)
                 except ValueError as e:
-                    return -1
+                    return 0.0
                 else:
                     return float(DictCurrency[key]*price)
-        return -1
+        return 0.0
     else:
-        if info.find('.') == -1:
-            return -1
         return price
 
 def isPublishing(info):
@@ -52,32 +76,11 @@ def isPublishing(info):
         return -1
 
 def checkBookInfo(infos):
-    # check date and price
-    tmp_infos = ['unknow' for i in range(5)]
-    date_pattern = r"[0-9]{4}(-[0-9]{1,2})?(-[0-9]{1,2})?"
 
-    print('current infos len:',len(infos))
-    for i in range(0,len(infos)):
+    # tag bookname :no tag no name
+    # unknow
+    if infos['ISBN'] == 'unknow' or infos['book_name'] == 'unknow':
+        return {}
 
-        price = isPrice(infos[i])
-        r = re.search(date_pattern,infos[i])
-        publish = isPublishing(infos[i])
-        if price != -1 and r is None and publish == -1:
-            # 兑换
-            tmp_infos[4] = price
-            continue
-        elif r is not None and price == -1 and publish == -1:
-            tmp_infos[3] = r.group(0)
-            continue
-        elif publish != -1:
-            tmp_infos[2] = publish
-        elif price == -1 and r is None and publish == -1:
-            if i != 3 and i != 4 and i != 2:
-                tmp_infos[i] = infos[i]
-            continue        
-        else:
-            continue
-        # except ValueError as e:
-        #     continue
-             
-    return tmp_infos
+    infos['price'] = trans_Price(infos['price'])
+    return infos
