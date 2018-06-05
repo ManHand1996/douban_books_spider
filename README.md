@@ -79,3 +79,9 @@ dp_data.to_csv(path_or_buf=cleaned_file,index=False,float_format='%.3f',sep='\\'
 ```
 
 >  数据分析，使用excel进行简单数据分析
+
+![](https://raw.githubusercontent.com/ManHand1996/douban_books_spider/master/tags.jpg)
+![](https://raw.githubusercontent.com/ManHand1996/douban_books_spider/master/comments.jpg)
+![](https://raw.githubusercontent.com/ManHand1996/douban_books_spider/master/publishing.jpg)
+
+
