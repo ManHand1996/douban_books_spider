@@ -2,7 +2,7 @@ import requests
 import os
 import time
 def getIP():
-	r = requests.get('http://tvp.daxiangdaili.com/ip/?tid=555423920612930&protocol=http&num=5&category=2')
+	r = requests.get('')
 	rtxt = r.text
 	ipList = rtxt.split('\r\n')
 	return ipList
