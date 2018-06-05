@@ -39,15 +39,15 @@ USER_AGENTS = [
 ROBOTSTXT_OBEY = False
 
 # Configure maximum concurrent requests performed by Scrapy (default: 16)
-CONCURRENT_REQUESTS = 4
+CONCURRENT_REQUESTS = 10
 
 # Configure a delay for requests for the same website (default: 0)
 # See https://doc.scrapy.org/en/latest/topics/settings.html#download-delay
 # See also autothrottle settings and docs
-DOWNLOAD_DELAY = 1.5
+DOWNLOAD_DELAY = 1.6
 # The download delay setting will honor only one of:
-CONCURRENT_REQUESTS_PER_DOMAIN = 4
-CONCURRENT_REQUESTS_PER_IP = 4
+# CONCURRENT_REQUESTS_PER_DOMAIN = 4
+# CONCURRENT_REQUESTS_PER_IP = 4
 
 # Disable cookies (enabled by default)
 COOKIES_ENABLED = False
@@ -107,6 +107,13 @@ ITEM_PIPELINES = {
 # Enable showing throttling stats for every response received:
 #AUTOTHROTTLE_DEBUG = False
 
+
+AUTOTHROTTLE_ENABLED = True
+AUTOTHROTTLE_START_DELAY = 5
+AUTOTHROTTLE_MAX_DELAY = 60.0
+AUTOTHROTTLE_TARGET_CONCURRENCY = 1
+
+
 # Enable and configure HTTP caching (disabled by default)
 # See https://doc.scrapy.org/en/latest/topics/downloader-middleware.html#httpcache-middleware-settings
 #HTTPCACHE_ENABLED = True
@@ -118,9 +125,9 @@ ITEM_PIPELINES = {
 DUPEFILTER_CLASS = "scrapy_redis.dupefilter.RFPDupeFilter"
 SCHEDULER = "scrapy_redis.scheduler.Scheduler"
 SCHEDULER_PERSIST = True
-#SCHEDULER_QUEUE_CLASS = "scrapy_redis.queue.SpiderPriorityQueue"
-#SCHEDULER_QUEUE_CLASS = "scrapy_redis.queue.SpiderQueue"
-#SCHEDULER_QUEUE_CLASS = "scrapy_redis.queue.SpiderStack"
+# SCHEDULER_QUEUE_CLASS = "scrapy_redis.queue.SpiderPriorityQueue"
+# SCHEDULER_QUEUE_CLASS = "scrapy_redis.queue.SpiderQueue"
+# SCHEDULER_QUEUE_CLASS = "scrapy_redis.queue.SpiderStack"
 
 LOG_LEVEL = 'DEBUG'
 

@@ -2,7 +2,7 @@ import requests
 import os
 import time
 def getIP():
-	r = requests.get('')
+	r = requests.get('http://tvp.daxiangdaili.com/ip/?tid=555423920612930&protocol=http&num=5&category=2')
 	rtxt = r.text
 	ipList = rtxt.split('\r\n')
 	return ipList
@@ -30,3 +30,5 @@ def getProxy():
 		return proxyList
 	else:
 		return getProxy()
+
+

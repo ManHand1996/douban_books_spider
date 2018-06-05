@@ -10,55 +10,53 @@ from scrapy.loader import ItemLoader
 from scrapy.loader.processors import MapCompose, Identity, Join,TakeFirst
 from w3lib.html import remove_tags
 
-def clean_book_name(value):
-    result = value.strip("\n '")
-    if result != "":
-        return result
+# def clean_book_name(value):
+#     result = value.strip("\n '")
+#     if result != "":
+#         return result
 
-def clean_book_info(value):
-    result = remove_tags(value).strip(' \n')
-    if result != "":
-        return result
-    else:
-        return "unknow/unknow/unknow/unknow/unknow"
+# def clean_book_info(value):
+#     result = remove_tags(value).strip(' \n')
+#     if result != "":
+#         return result
+#     else:
+#         return "unknow/unknow/unknow/unknow/unknow"
 
-def replace_empty_comments(value):
-    tmp = remove_tags(value).strip(' \n')
-    if tmp == '(少于10人评价)' or tmp == '(目前无人评价)':
-        return '0.0'
+# def replace_empty_comments(value):
+#     tmp = remove_tags(value).strip(' \n')
+#     if tmp == '(少于10人评价)' or tmp == '(目前无人评价)':
+#         return '0.0'
 
-    r = remove_tags(value).strip(' \n(少于目前暂无人评价)')
-    if r == '' or len(r) == 0:
-        return '0.0'
-    else:
-        return r
+#     r = remove_tags(value).strip(' \n(少于目前暂无人评价)')
+#     if r == '' or len(r) == 0:
+#         return '0.0'
+#     else:
+#         return r
 
 def replace_empty_ratings(value):
-    r = remove_tags(value)
-    if r == '' or len(r) == 0:
-        return '0'
-    else:
+    r = remove_tags(value).replace(" ","")
+    if r != '' and len(r) > 0:
         return r
 
 class BookItem(Item):
     """docstring for myItem"""
-    book_name = Field(
-        input_processor = MapCompose(clean_book_name),
-        output_processor = TakeFirst(),
-    )
-    
-    book_info = Field(
-        input_processor = MapCompose(clean_book_info),
-        output_processor = TakeFirst(),
-    )
-
+    author = Field()
+    publishing = Field()
+    original = Field()
+    translator = Field()
+    date = Field()
+    pages = Field()
+    price = Field()
+    series = Field()
+    ISBN = Field()
+    book_name = Field()
     rating = Field(
         input_processor = MapCompose(replace_empty_ratings),
         output_processor = TakeFirst(),
     )
 
     comments = Field(
-        input_processor = MapCompose(replace_empty_comments),
+        input_processor = MapCompose(),
         output_processor = TakeFirst(),
     )
 

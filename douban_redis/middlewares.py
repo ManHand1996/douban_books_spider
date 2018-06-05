@@ -6,16 +6,7 @@ from scrapy.exceptions import IgnoreRequest
 from scrapy.downloadermiddlewares.retry import RetryMiddleware
 import os
 from douban_redis import settings
-# def get_cookie():
-#     with open('/home/manhand/Downloads/scrapy-redis/example-project/example/spiders/cookies.txt','r') as f:
-#         cookieStr = f.read()
-#         cookieList = cookieStr.split(';')
-#         cookies = {}
-#         for cookie in cookieList:
-#             temp = cookie.split('=')
-#             name, value = temp[0].strip(' '), temp[1].strip('"')
-#             cookies[name] = value
-#         return cookies
+
 
 class RandomUserAgent(object):
 
@@ -42,9 +33,22 @@ class ProxyMiddleware(object):
     
     # def __init__(self,ip):
     #     self.ip = ip
+    @staticmethod
+    def readd_url(proxy_port,url):
+        try:
+            if settings.PROXIES.index(proxy_port) >= 0:
+                settings.PROXIES.remove(proxy_port)
+                print("current proxies:{0}".format(settings.PROXIES))
+        except Exception as e:
+            pass
+        cmd = "/usr/local/redis/bin/redis-cli -a 'redispassword' lpush "+'books:start_urls'+" "+url
+        os.popen(cmd)
+        print('exception -> readd: %s'%url)
+        return
+
 
     def process_request(self,request,spider):
-
+        
         if len(settings.PROXIES) == 0:
             settings.PROXIES = getProxy()
         ip_port = random.choice(settings.PROXIES)
@@ -53,42 +57,37 @@ class ProxyMiddleware(object):
         print(settings.PROXIES)
     
     def process_response(self,request,response,spider):
+        proxy_port = request.meta['proxy'].strip('http://')
         if str(response.url).find("https://sec.douban.com/") >= 0:
+            settings.PROXIES = []
             raise IgnoreRequest
+            return
+
         print('precess_response -> proxy:%s'%request.meta['proxy'])
+        
         if response.status == 200:
-            
             return response
         else:
-            try:
-                if settings.PROXIES.index(request.meta['proxy'].strip('http://')) >= 0:
-                    settings.PROXIES.remove(request.meta['proxy'].strip('http://'))
-            except Exception as e:
-                pass
-            print('pop :%s'%request.meta['proxy'].strip('http://'))
-            cmd = "/usr/local/redis/bin/redis-cli -a 'redispassword' lpush "+'master:start_urls'+" "+request.url
-            os.popen(cmd)
-            print('response proxy fail -> readd: %s'%request.url)
+            self.readd_url(proxy_port,request.url)
             raise IgnoreRequest
 
     def process_exception(self,request,exception,spider):
+        proxy_port = request.meta['proxy'].strip('http://')
         if str(request.url).find("https://sec.douban.com/") >= 0:
-            return 
-        print('proxy fail connect')
-        print(request.meta['proxy'])
-        print(settings.PROXIES)
-        # settings.PROXIES.remove(request.meta['proxy'].strip('http://'))
-        try:
-            if settings.PROXIES.index(request.meta['proxy'].strip('http://')) >= 0:
-                settings.PROXIES.remove(request.meta['proxy'].strip('http://'))
-                print("current proxies:{0}".format(settings.PROXIES))
-        except Exception as e:
-            pass
-        cmd = "/usr/local/redis/bin/redis-cli -a 'redispassword' lpush "+'master:start_urls'+" "+request.url
-        os.popen(cmd)
-        print('exception proxy fail -> readd: %s'%request.url)
-        raise IgnoreRequest
-        return
+            try:
+                if settings.PROXIES.index(proxy_port) >= 0:
+                    settings.PROXIES.remove(proxy_port)
+            except Exception as e:
+                pass
+            raise IgnoreRequest
+            return
+        else:
+            print('proxy fail connect')
+            print(request.meta['proxy'])
+            print(settings.PROXIES)
+            self.readd_url(proxy_port,request.url)
+            raise IgnoreRequest
+            return
 
 class MyRetryMiddleware(RetryMiddleware):
 
@@ -106,6 +105,6 @@ class MyRetryMiddleware(RetryMiddleware):
         super(MyRetryMiddleware,self)._retry(request, reason, spider)
         if request.meta['retry_times'] >= settings.RETRY_TIMES:
             
-            cmd = "/usr/local/redis/bin/redis-cli -a 'redispassword' lpush "+'master:start_urls'+" "+request.url
+            cmd = "/usr/local/redis/bin/redis-cli -a 'redispassword' lpush "+'books:start_urls'+" "+request.url
             os.popen(cmd)
             print('end retry :add %s'%request.url)

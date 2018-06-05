@@ -10,6 +10,6 @@ from scrapy.exceptions import DropItem
 class DoubanRedisPipeline(object):
     def process_item(self, item, spider):
         if item.get('PROCESS'):
-            raise DropItem("process push url "%item)
+            raise DropItem("process url "%item)
         else:
             return item
