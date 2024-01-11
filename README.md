@@ -20,6 +20,7 @@ Scrapy + redis + MySQL爬去douban图书8w条数据
 ##### getIP.py
 
 ```
+代理池：https://github.com/jhao104/proxy_pool ！
 获取代理接口的代理IP
 ```
 ##### process_item_mysql.py
